@@ -12,5 +12,5 @@ Mac and Linux:
 UNKOWN TO US
 
 Extra libraries:
-react-native-swiper
+react-native-swiper, 
 native-base
