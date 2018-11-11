@@ -10,3 +10,7 @@ Choose the BLANK version. (This is generally selected by default)
 
 Mac and Linux:
 UNKOWN TO US
+
+Extra libraries:
+react-native-swiper
+native-base
