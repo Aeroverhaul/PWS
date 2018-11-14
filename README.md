@@ -14,3 +14,5 @@ UNKOWN TO US
 Extra libraries:
 
 react-native-navigation
+
+join ark
