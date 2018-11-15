@@ -7,17 +7,16 @@ import PopularView from './Components/PopularView';
 import SoonView from './Components/SoonView';
 import UniqueView from './Components/UniqueView';
 
-import FavoriteScreen from './Components/FavoriteScreen';
 import PlannerScreen from './Components/PlannerScreen';
 import TrackerScreen from './Components/TrackerScreen';
 
-console.disableYellowBox = true;
+console.disableYellowBox = false;
 
 export default class App extends React.Component {
   render() {
     return (
         <View style={{flex: 1}}>
-            <AppNavigator dataCallback={this.setData} readCallback={this.changeReading} />
+            <AppNavigator />
         </View>
     );
   }
@@ -63,12 +62,6 @@ const AppNavigator = createBottomTabNavigator({
         navigationOptions: {
             tabBarLabel: 'Activity',
             tabBarIcon: ({tintColor}) => (<Icon name="ios-home" color={tintColor} size={24} />)
-        }
-    },
-    favorite: { screen:FavoriteScreen,
-        navigationOptions: {
-            tabBarLabel: 'Favorite',
-            tabBarIcon: ({tintColor}) => (<Icon name="ios-star" color={tintColor} size={24} />)
         }
     },
     planner: { screen:PlannerScreen,

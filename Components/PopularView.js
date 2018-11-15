@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Alert, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 
 import ReadScreen from './ReadScreen';
 
@@ -10,17 +10,16 @@ export default class PopularView extends React.Component {
             dataSource: [],
             isLoading: true,
             reading: false,
-            iName: 'default'
+            item: null
         };
         this.startReading = this.startReading.bind(this);
         this.stopReading = this.stopReading.bind(this);
-        this.componentDidMount = this.componentDidMount.bind(this);
     }
 
     startReading = ({item}) => {
         this.setState({
             reading: true,
-            iName: item.name
+            item: item
         });
     }
 
@@ -31,17 +30,16 @@ export default class PopularView extends React.Component {
     }
 
     renderItem = ({item}) => {
-        this.setName
         return(
             <TouchableOpacity style={{flex: 1, flexDirection: 'row', marginBottom: 5}} onPress={() => this.startReading({item})}>
                 <Text>{item.name}</Text>
-                <Text>{item.desc}</Text>
+                <Text>{item.time}</Text>
             </TouchableOpacity>
         );
     }
 
     componentDidMount(){
-        const url = 'http://www.h17nsnoek.helenparkhurst.net/PWS/test.json'
+        var url = 'http://www.h17nsnoek.helenparkhurst.net/PWS/test.json'
 
         fetch(url)
         .then((response) => response.json())
@@ -52,14 +50,14 @@ export default class PopularView extends React.Component {
             })
         })
         .catch((error) => {
-            Alert.alert('Could not reach the server!')
+            alert('Could not reach the server!')
         })
     }
 
   render() {
     return (
         this.state.reading ?
-        <ReadScreen iname={this.state.iName} stopReading={this.stopReading}/>
+        <ReadScreen item={this.state.item} stopReading={this.stopReading}/>
         :
         this.state.isLoading ?
         <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
@@ -70,6 +68,7 @@ export default class PopularView extends React.Component {
             <FlatList
                 data={this.state.dataSource}
                 renderItem={this.renderItem}
+                keyExtractor={item => item.name}
             />
         </View>
     );
