@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Button } from 'react-native';
 
 import ReadScreen from './ReadScreen';
 
@@ -14,6 +14,36 @@ export default class PopularView extends React.Component {
         };
         this.startReading = this.startReading.bind(this);
         this.stopReading = this.stopReading.bind(this);
+        this.refreshPlanner = this.refreshPlanner.bind(this);
+    }
+
+    refreshPlanner(){
+        this.setState({
+            isLoading: true
+        });
+
+        fetch('http://www.h17nsnoek.helenparkhurst.net/PWS/test2.json')
+        .then((response) => response.json())
+        .then((responseJson) => {
+            this.setState({
+                dataSource: responseJson.event_array,
+            });
+            fetch('http://www.h17nsnoek.helenparkhurst.net/PWS/test2.json')
+            .then((response) => response.json())
+            .then((responseJson) => {
+                this.setState({
+                    dataSource: responseJson.event_array,
+                    isLoading: false
+                });
+                alert('Refreshed!');
+            })
+            .catch((error) => {
+                alert('Could not reach the server!')
+            });
+        })
+        .catch((error) => {
+            alert('Could not reach the server!')
+        });
     }
 
     startReading = ({item}) => {
@@ -39,7 +69,7 @@ export default class PopularView extends React.Component {
     }
 
     componentDidMount(){
-        var url = 'http://www.h17nsnoek.helenparkhurst.net/PWS/test.json'
+        var url = 'http://www.h17nsnoek.helenparkhurst.net/PWS/test2.json'
 
         fetch(url)
         .then((response) => response.json())
@@ -65,6 +95,7 @@ export default class PopularView extends React.Component {
         </View>
         :
         <View style={styles.slide}>
+            <Button onPress={() => this.refreshPlanner()} title='Refresh' />
             <FlatList
                 data={this.state.dataSource}
                 renderItem={this.renderItem}

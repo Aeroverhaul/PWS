@@ -26,6 +26,8 @@ export default class ReadScreen extends React.Component {
                 await AsyncStorage.setItem('planner_name', `${name_string}${new_name},`);
                 await AsyncStorage.setItem('planner_time', `${time_string}${new_time},`);
                 alert(`${new_name} has been added to your planner!`);
+            } else {
+                alert('This is already in your planner!');
             }
         } else {
             await AsyncStorage.setItem('planner_name', `${new_name},`);
@@ -40,7 +42,7 @@ export default class ReadScreen extends React.Component {
     return (
         <View style={styles.slide}>
             <Button onPress={() => this.props.stopReading()} title='Go Back' />
-            <Button onPress={() => this.addToPlanner()} title='Add to favorite' />
+            <Button onPress={() => this.addToPlanner()} title='Add to your planner' />
             <Text>{this.props.item.name}</Text>
         </View>
     );

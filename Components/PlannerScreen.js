@@ -1,5 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View, AsyncStorage, Button, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, AsyncStorage, Button, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+
+import ReadScreen from './ReadScreen';
 
 export default class PlannerScreen extends React.Component {
     constructor(props){
@@ -21,6 +23,7 @@ export default class PlannerScreen extends React.Component {
     resetPlanner = async ()=>{
         await AsyncStorage.setItem('planner_time', '');
         await AsyncStorage.setItem('planner_name', '');
+        this.refreshPlanner();
         alert('Planner has been reset!');
     }
 
@@ -29,25 +32,50 @@ export default class PlannerScreen extends React.Component {
         alert(planner);
     }
 
-    refreshPlanner() {
+    refreshPlanner(){
         this.setState({
             isLoading: true
         });
 
-        var url = 'http://www.h17nsnoek.helenparkhurst.net/PWS/test.json'
-
-        fetch(url)
+        fetch('http://www.h17nsnoek.helenparkhurst.net/PWS/test2.json')
         .then((response) => response.json())
         .then((responseJson) => {
             this.setState({
                 dataSource: responseJson.event_array,
-                isLoading: false
             });
-            alert('Refreshed!');
+            this.forceUpdate();
+            fetch('http://www.h17nsnoek.helenparkhurst.net/PWS/test2.json')
+            .then((response) => response.json())
+            .then((responseJson) => {
+                this.setState({
+                    dataSource: responseJson.event_array,
+                    isLoading: false
+                });
+                alert('Refreshed!');
+                this.forceUpdate();
+            })
+            .catch((error) => {
+                alert('Could not reach the server!')
+            });
         })
         .catch((error) => {
             alert('Could not reach the server!')
+        });
+    }
+
+    componentDidMount() {
+        fetch('http://www.h17nsnoek.helenparkhurst.net/PWS/test2.json')
+        .then((response) => response.json())
+        .then((responseJson) => {
+            this.setState({
+                dataSource: responseJson.event_array,
+                isLoading: false,
+                name_string: null
+            });
         })
+        .catch((error) => {
+            alert('Could not reach the server!')
+        });
     }
 
     startReading = ({item}) => {
@@ -63,13 +91,17 @@ export default class PlannerScreen extends React.Component {
         })
     }
 
-    renderItem = async ({item}) => {
+    renderItem = ({item}) => {
         var approved = false;
 
-        var name_string = await AsyncStorage.getItem('planner_name');
+        AsyncStorage.getItem('planner_name').then(name => {
+          this.setState({
+            name_string: name
+          });
+        })
 
-        if(name_string != null){
-            var name_array = name_string.split(',');
+        if(this.state.name_string != null){
+            var name_array = this.state.name_string.split(',');
 
             name_array.map(name => {
                 if(name == item.name){
@@ -93,6 +125,11 @@ export default class PlannerScreen extends React.Component {
     return (
         this.state.reading ?
         <ReadScreen item={this.state.item} stopReading={this.stopReading}/>
+        :
+        this.state.isLoading ?
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <ActivityIndicator size='large' color='#330066' animating />
+        </View>
         :
         <View style={styles.slide}>
             <Button onPress={() => this.refreshPlanner()} title='Refresh' />
