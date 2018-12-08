@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, 
 
 import ReadScreen from './ReadScreen';
 
-export default class PopularView extends React.Component {
+export default class StudentView extends React.Component {
     constructor(){
         super();
         this.state = {
@@ -29,13 +29,14 @@ export default class PopularView extends React.Component {
             this.setState({
                 dataSource: responseJson.content,
                 isLoading: false
-            })
+            });
+            alert('Refreshed!');
         })
         .catch((error) => {
             alert('Could not reach the server!')
-        })
+        });
         await AsyncStorage.setItem("database", this.state.dataSource);
-     }
+    }
 
     startReading = ({item}) => {
         this.setState({
@@ -63,10 +64,18 @@ export default class PopularView extends React.Component {
         init();
     }
     init = async ()=>{
-        db = await AsyncStorage.getItem("database");
-        this.setState({
-            database: db
+        var url = await AsyncStorage.getItem("database_url");
+        fetch(url)
+        .then((response) => response.json())
+        .then((responseJson) => {
+            this.setState({
+                dataSource: responseJson.content,
+            });
+        })
+        .catch((error) => {
+            alert('Could not reach the server!')
         });
+        await AsyncStorage.setItem("database", this.state.dataSource);
     }
 
   render() {

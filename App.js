@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, AsyncStorage } from 'react-native';
 import { createBottomTabNavigator, createMaterialTopTabNavigator } from 'react-navigation';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -13,7 +13,27 @@ import TrackerScreen from './Components/TrackerScreen';
 console.disableYellowBox = true;
 
 export default class App extends React.Component {
+constructor(props){
+    super(props);
+    this.state = {
+        database: []
+    }
+}
   render() {
+    await AsyncStorage.setItem("database_url", 'https://www.h17nsnoek.helenparkhurst.net/PWS/test2.json');
+    var  url = await AsyncStorage.getItem("database_url");
+    fetch(url)
+    .then((response) => response.json())
+    .then((responseJson) => {
+        this.setState({
+            database: responseJson.content
+        });
+    })
+    .catch((error) => {
+        alert('Could not reach the server!');
+    })
+    await AsyncStorage.setItem('database', this.state.database);
+
     return (
         <View style={{flex: 1}}>
             <AppNavigator />

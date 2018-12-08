@@ -8,74 +8,64 @@ export default class PlannerScreen extends React.Component {
         super(props);
         this.state = {
             dataSource: [],
-            isLoading: true,
+            isLoading: false,
             item: null,
             reading: false
         }
         this.resetPlanner = this.resetPlanner.bind(this);
-        this.showPlanner = this.showPlanner.bind(this);
         this.refreshPlanner = this.refreshPlanner.bind(this);
         this.startReading = this.startReading.bind(this);
         this.stopReading = this.stopReading.bind(this);
         this.renderItem = this.renderItem.bind(this);
+        this.removeItem = this.removeItem.bind(this);
     }
 
     resetPlanner = async ()=>{
         await AsyncStorage.setItem('planner_time', '');
         await AsyncStorage.setItem('planner_name', '');
+        await AsyncStorage.setItem('planner_id', '');
         this.refreshPlanner();
         alert('Planner has been reset!');
     }
 
-    showPlanner = async ()=>{
-        var planner = await AsyncStorage.getItem('planner_name');
-        alert(planner);
-    }
-
-    refreshPlanner(){
+    refreshPlanner = async ()=>{
         this.setState({
             isLoading: true
         });
 
-        fetch('http://www.h17nsnoek.helenparkhurst.net/PWS/test2.json')
+        var url = await AsyncStorage.getItem("database_url");
+        fetch(url)
         .then((response) => response.json())
         .then((responseJson) => {
             this.setState({
-                dataSource: responseJson.event_array,
+                dataSource: responseJson.content,
+                isLoading: false
             });
-            this.forceUpdate();
-            fetch('http://www.h17nsnoek.helenparkhurst.net/PWS/test2.json')
-            .then((response) => response.json())
-            .then((responseJson) => {
-                this.setState({
-                    dataSource: responseJson.event_array,
-                    isLoading: false
-                });
-                alert('Refreshed!');
-                this.forceUpdate();
-            })
-            .catch((error) => {
-                alert('Could not reach the server!')
-            });
+            alert('Refreshed!');
         })
         .catch((error) => {
             alert('Could not reach the server!')
         });
+        await AsyncStorage.setItem("database", this.state.dataSource);
     }
 
     componentDidMount() {
-        fetch('http://www.h17nsnoek.helenparkhurst.net/PWS/test2.json')
+        init();
+    }
+    init = async ()=>{
+        var url = await AsyncStorage.getItem("database_url");
+        fetch(url)
         .then((response) => response.json())
         .then((responseJson) => {
             this.setState({
-                dataSource: responseJson.event_array,
-                isLoading: false,
-                name_string: null
+                dataSource: responseJson.content,
+                isLoading: false
             });
         })
         .catch((error) => {
             alert('Could not reach the server!')
         });
+        await AsyncStorage.setItem("database", this.state.dataSource);
     }
 
     startReading = ({item}) => {
@@ -94,17 +84,17 @@ export default class PlannerScreen extends React.Component {
     renderItem = ({item}) => {
         var approved = false;
 
-        AsyncStorage.getItem('planner_name').then(name => {
+        AsyncStorage.getItem('planner_id').then(id => {
           this.setState({
-            name_string: name
+            id_string: id
           });
         })
 
-        if(this.state.name_string != null){
-            var name_array = this.state.name_string.split(',');
+        if(this.state.id_string != null){
+            var id_array = this.state.id_string.split(',');
 
-            name_array.map(name => {
-                if(name == item.name){
+            id_array.map(id => {
+                if(id == item.id){
                     approved = true;
                 }
             })
@@ -112,13 +102,48 @@ export default class PlannerScreen extends React.Component {
 
         if(approved){
             return (
-                <TouchableOpacity style={{flex: 1, flexDirection: 'row', marginBottom: 5}} onPress={() => this.startReading({item})}>
-                    <Text>{item.name}</Text>
-                </TouchableOpacity>
+                <View style={{flex: 1, flexDirection: 'row', marginBottom: 5}}>
+                    <TouchableOpacity onPress={() => this.startReading({item})}>
+                        <Text>{item.name}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => this.removeItem({item})}>
+                        <Text>Remove</Text>
+                    </TouchableOpacity>
+                </View>
             );
         } else {
             return null
         }
+    }
+
+    removeItem = async ({item})=>{
+        index = 0;
+        found = false;
+        $temp = await AsyncStorage.getItem('planner_id');
+        alert($temp);
+        var $ids_array = $temp.split(',');
+        $ids_array.map(id => {
+            if(id==item.id){
+                found = true;
+            }
+            if(!found){
+                index++;
+            }
+        })
+        $temp = $temp.replace(`${$temp.split(",")[index]},`, "");
+        await AsyncStorage.setItem('planner_id', $temp);
+
+        $temp = await AsyncStorage.getItem('planner_time');
+        $temp = $temp.replace(`${$temp.split(",")[index]},`, "");
+        await AsyncStorage.setItem('planner_time', $temp);
+
+        $temp = await AsyncStorage.getItem('planner_name');
+        $temp = $temp.replace(`${$temp.split(",")[index]},`, "");
+        await AsyncStorage.setItem('planner_name', $temp);
+
+        this.refreshPlanner();
+        var planner = await AsyncStorage.getItem('planner_name');
+        alert(planner);
     }
 
   render() {
@@ -133,7 +158,6 @@ export default class PlannerScreen extends React.Component {
         :
         <View style={styles.slide}>
             <Button onPress={() => this.refreshPlanner()} title='Refresh' />
-            <Button onPress={() => this.showPlanner()} title='Show Planner' />
             <Button onPress={() => this.resetPlanner()} title='Reset Planner' />
             <FlatList
                 data={this.state.dataSource}
