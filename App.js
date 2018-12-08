@@ -10,33 +10,53 @@ import UniqueView from './Components/UniqueView';
 import PlannerScreen from './Components/PlannerScreen';
 import TrackerScreen from './Components/TrackerScreen';
 
+import StartScreen from './Components/StartScreen';
+
 console.disableYellowBox = true;
 
 export default class App extends React.Component {
 constructor(props){
     super(props);
     this.state = {
-        database: []
+        connected: false
     }
+    this.init = this.init.bind(this);
+    this.getJson = this.getJson.bind(this);
 }
-  render() {
-    await AsyncStorage.setItem("database_url", 'https://www.h17nsnoek.helenparkhurst.net/PWS/test2.json');
-    var  url = await AsyncStorage.getItem("database_url");
-    fetch(url)
-    .then((response) => response.json())
-    .then((responseJson) => {
-        this.setState({
-            database: responseJson.content
-        });
-    })
-    .catch((error) => {
-        alert('Could not reach the server!');
-    })
-    await AsyncStorage.setItem('database', this.state.database);
 
+componentDidMount(){
+    this.getJson().then(json => this.init({json}));
+}
+init = async ({json})=>{
+    await AsyncStorage.setItem("database_url", 'https://www.h17nsnoek.helenparkhurst.net/PWS/test2.json');
+    await AsyncStorage.setItem('database', JSON.stringify(json));
+}
+getJson = async ()=>{
+    var url = await AsyncStorage.getItem("database_url");
+    return fetch(url,
+    {
+        method: "GET",
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then((response) => response.json())
+    .then((responseData) => {
+        console.warn(responseData);
+        return responseData;
+    })
+}
+
+  render() {
     return (
+        this.state.connected ?
         <View style={{flex: 1}}>
             <AppNavigator />
+        </View>
+        :
+        <View style={{flex: 1}}>
+            <StartScreen />
         </View>
     );
   }

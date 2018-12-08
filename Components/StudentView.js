@@ -15,27 +15,35 @@ export default class StudentView extends React.Component {
         this.startReading = this.startReading.bind(this);
         this.stopReading = this.stopReading.bind(this);
         this.refreshPlanner = this.refreshPlanner.bind(this);
+        this.startUp = this.startUp.bind(this);
+        this.update = this.update.bind(this);
+        this.getJson = this.getJson.bind(this);
     }
 
-    refreshPlanner = async ()=>{
+    refreshPlanner(){
+        this.getJson().then(json => this.update({json}));
+    }
+    update = async ({json})=>{
+        await AsyncStorage.setItem('database', JSON.stringify(json));
         this.setState({
-            isLoading: true
+            dataSource: json.content
         });
-
+    }
+    getJson = async ()=>{
         var url = await AsyncStorage.getItem("database_url");
-        fetch(url)
-        .then((response) => response.json())
-        .then((responseJson) => {
-            this.setState({
-                dataSource: responseJson.content,
-                isLoading: false
-            });
-            alert('Refreshed!');
+        return fetch(url,
+        {
+            method: "GET",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
         })
-        .catch((error) => {
-            alert('Could not reach the server!')
-        });
-        await AsyncStorage.setItem("database", this.state.dataSource);
+        .then((response) => response.json())
+        .then((responseData) => {
+            console.warn(responseData);
+            return responseData;
+        })
     }
 
     startReading = ({item}) => {
@@ -61,21 +69,14 @@ export default class StudentView extends React.Component {
     }
 
     componentDidMount(){
-        init();
+        this.startUp();
     }
-    init = async ()=>{
-        var url = await AsyncStorage.getItem("database_url");
-        fetch(url)
-        .then((response) => response.json())
-        .then((responseJson) => {
-            this.setState({
-                dataSource: responseJson.content,
-            });
+    startUp = async ()=>{
+        var temp = await AsyncStorage.getItem('database');
+        var db = JSON.parse(temp).content;
+        this.setState({
+            dataSource: db
         })
-        .catch((error) => {
-            alert('Could not reach the server!')
-        });
-        await AsyncStorage.setItem("database", this.state.dataSource);
     }
 
   render() {
@@ -93,7 +94,7 @@ export default class StudentView extends React.Component {
             <FlatList
                 data={this.state.dataSource}
                 renderItem={this.renderItem}
-                keyExtractor={item => item.name}
+                keyExtractor={item => item.id}
             />
         </View>
     );

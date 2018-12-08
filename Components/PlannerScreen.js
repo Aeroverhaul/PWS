@@ -18,54 +18,54 @@ export default class PlannerScreen extends React.Component {
         this.stopReading = this.stopReading.bind(this);
         this.renderItem = this.renderItem.bind(this);
         this.removeItem = this.removeItem.bind(this);
+        this.startUp = this.startUp.bind(this);
+        this.update = this.update.bind(this);
+        this.getJson = this.getJson.bind(this);
     }
 
     resetPlanner = async ()=>{
         await AsyncStorage.setItem('planner_time', '');
         await AsyncStorage.setItem('planner_name', '');
         await AsyncStorage.setItem('planner_id', '');
-        this.refreshPlanner();
+        //make a function to update the render
         alert('Planner has been reset!');
     }
 
-    refreshPlanner = async ()=>{
+    refreshPlanner(){
+        this.getJson().then(json => this.update({json}));
+    }
+    update = async ({json})=>{
+        await AsyncStorage.setItem('database', JSON.stringify(json));
         this.setState({
-            isLoading: true
+            dataSource: json.content
         });
-
+    }
+    getJson = async ()=>{
         var url = await AsyncStorage.getItem("database_url");
-        fetch(url)
-        .then((response) => response.json())
-        .then((responseJson) => {
-            this.setState({
-                dataSource: responseJson.content,
-                isLoading: false
-            });
-            alert('Refreshed!');
+        return fetch(url,
+        {
+            method: "GET",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
         })
-        .catch((error) => {
-            alert('Could not reach the server!')
-        });
-        await AsyncStorage.setItem("database", this.state.dataSource);
+        .then((response) => response.json())
+        .then((responseData) => {
+            console.warn(responseData);
+            return responseData;
+        })
     }
 
-    componentDidMount() {
-        init();
+    componentDidMount(){
+        this.startUp();
     }
-    init = async ()=>{
-        var url = await AsyncStorage.getItem("database_url");
-        fetch(url)
-        .then((response) => response.json())
-        .then((responseJson) => {
-            this.setState({
-                dataSource: responseJson.content,
-                isLoading: false
-            });
+    startUp = async ()=>{
+        var temp = await AsyncStorage.getItem('database');
+        var db = JSON.parse(temp).content;
+        this.setState({
+            dataSource: db
         })
-        .catch((error) => {
-            alert('Could not reach the server!')
-        });
-        await AsyncStorage.setItem("database", this.state.dataSource);
     }
 
     startReading = ({item}) => {
@@ -120,7 +120,6 @@ export default class PlannerScreen extends React.Component {
         index = 0;
         found = false;
         $temp = await AsyncStorage.getItem('planner_id');
-        alert($temp);
         var $ids_array = $temp.split(',');
         $ids_array.map(id => {
             if(id==item.id){
@@ -142,8 +141,6 @@ export default class PlannerScreen extends React.Component {
         await AsyncStorage.setItem('planner_name', $temp);
 
         this.refreshPlanner();
-        var planner = await AsyncStorage.getItem('planner_name');
-        alert(planner);
     }
 
   render() {
@@ -162,7 +159,7 @@ export default class PlannerScreen extends React.Component {
             <FlatList
                 data={this.state.dataSource}
                 renderItem={this.renderItem}
-                keyExtractor={item => item.name}
+                keyExtractor={item => item.id}
             />
         </View>
     );
