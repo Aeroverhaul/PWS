@@ -3,9 +3,8 @@ import { StyleSheet, Text, View, AsyncStorage } from 'react-native';
 import { createBottomTabNavigator, createMaterialTopTabNavigator } from 'react-navigation';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-import PopularView from './Components/PopularView';
-import StudentView from './Components/StudentView';
-import UniqueView from './Components/UniqueView';
+import ListScreen from './Components/ListScreen';
+import SearchScreen from './Components/SearchScreen';
 
 import PlannerScreen from './Components/PlannerScreen';
 import TrackerScreen from './Components/TrackerScreen';
@@ -18,18 +17,14 @@ export default class App extends React.Component {
 constructor(props){
     super(props);
     this.state = {
-        connected: false
+        connected: false,
     }
     this.init = this.init.bind(this);
     this.getJson = this.getJson.bind(this);
 }
 
-componentDidMount(){
-    this.getJson().then(json => this.init({json}));
-}
 init = async ({json})=>{
-    await AsyncStorage.setItem("database_url", 'https://www.h17nsnoek.helenparkhurst.net/PWS/test2.json');
-    await AsyncStorage.setItem('database', JSON.stringify(json));
+   await AsyncStorage.setItem('database', JSON.stringify(json));
 }
 getJson = async ()=>{
     var url = await AsyncStorage.getItem("database_url");
@@ -43,9 +38,16 @@ getJson = async ()=>{
     })
     .then((response) => response.json())
     .then((responseData) => {
-        console.warn(responseData);
         return responseData;
     })
+}
+
+connect = async ({url})=>{
+    await AsyncStorage.setItem("database_url", url);
+    this.setState({
+        connected: true
+    })
+    this.getJson().then(json => this.init({json}));
 }
 
   render() {
@@ -56,34 +58,40 @@ getJson = async ()=>{
         </View>
         :
         <View style={{flex: 1}}>
-            <StartScreen />
+            <StartScreen connected={(url) => this.connect({url})}/>
         </View>
     );
   }
 }
 
 const FilterTabNavigator = createMaterialTopTabNavigator({
-    popular: {
-        screen: PopularView,
+    screen1: {
+        screen: ({navigation}) => <ListScreen order_number={1} screenProps={{ rootNavigation: navigation }}/>,
         navigationOptions: {
-            tabBarLabel: 'Popular'
+            tabBarLabel: 'default1',
         }
     },
-    student: {
-        screen: StudentView,
+    screen2: {
+        screen: ({navigation}) => <ListScreen order_number={2} screenProps={{ rootNavigation: navigation }}/>,
         navigationOptions: {
-            tabBarLabel: 'Students'
+            tabBarLabel: 'default2',
         }
     },
-    unique: {
-        screen: UniqueView,
+    screen3: {
+        screen: ({navigation}) => <ListScreen order_number={3} screenProps={{ rootNavigation: navigation }}/>,
         navigationOptions: {
-            tabBarLabel: 'Unique'
+            tabBarLabel: 'default3',
+        }
+    },
+    search: {
+        screen: SearchScreen,
+        navigationOptions: {
+            tabBarLabel: 'Search',
         }
     }
 }, {
-    initialRouteName: 'popular',
-    order: ['popular','student','unique'],
+    initialRouteName: 'screen1',
+    order: ['screen1','screen2','screen3','search'],
     tabBarOptions:{
         activeTintColor:'black',
         inactiveTintColor:'gray',
@@ -95,7 +103,7 @@ const FilterTabNavigator = createMaterialTopTabNavigator({
             backgroundColor: 'lightblue'
         }
     }
-})
+});
 
 const AppNavigator = createBottomTabNavigator({
     activity: { screen: FilterTabNavigator,

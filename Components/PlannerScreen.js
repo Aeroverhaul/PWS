@@ -27,7 +27,7 @@ export default class PlannerScreen extends React.Component {
         await AsyncStorage.setItem('planner_time', '');
         await AsyncStorage.setItem('planner_name', '');
         await AsyncStorage.setItem('planner_id', '');
-        //make a function to update the render
+        this.startUp();
         alert('Planner has been reset!');
     }
 
@@ -52,7 +52,6 @@ export default class PlannerScreen extends React.Component {
         })
         .then((response) => response.json())
         .then((responseData) => {
-            console.warn(responseData);
             return responseData;
         })
     }
@@ -129,18 +128,23 @@ export default class PlannerScreen extends React.Component {
                 index++;
             }
         })
-        $temp = $temp.replace(`${$temp.split(",")[index]},`, "");
-        await AsyncStorage.setItem('planner_id', $temp);
+        if($ids_array.length == 1){
+            await AsyncStorage.setItem('planner_time', '');
+            await AsyncStorage.setItem('planner_name', '');
+            await AsyncStorage.setItem('planner_id', '');
+        } else {
+            $temp = $temp.replace(`${$temp.split(",")[index]},`, "");
+            await AsyncStorage.setItem('planner_id', $temp);
 
-        $temp = await AsyncStorage.getItem('planner_time');
-        $temp = $temp.replace(`${$temp.split(",")[index]},`, "");
-        await AsyncStorage.setItem('planner_time', $temp);
+            $temp = await AsyncStorage.getItem('planner_time');
+            $temp = $temp.replace(`${$temp.split(",")[index]},`, "");
+            await AsyncStorage.setItem('planner_time', $temp);
 
-        $temp = await AsyncStorage.getItem('planner_name');
-        $temp = $temp.replace(`${$temp.split(",")[index]},`, "");
-        await AsyncStorage.setItem('planner_name', $temp);
-
-        this.refreshPlanner();
+            $temp = await AsyncStorage.getItem('planner_name');
+            $temp = $temp.replace(`${$temp.split(",")[index]},`, "");
+            await AsyncStorage.setItem('planner_name', $temp);
+        }
+        this.startUp();
     }
 
   render() {
